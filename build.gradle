@@ -1,0 +1,45 @@
+plugins {
+    id 'java'
+    id 'com.github.johnrengelman.shadow' version '7.0.0'
+    id 'maven-publish'
+}
+
+group 'JarMocker'
+version = "0.0.2"
+
+repositories {
+    mavenCentral()
+    maven{ url 'https://repo.bg-software.com/repository/nms/' }
+}
+
+dependencies {
+    implementation 'commons-cli:commons-cli:1.5.0'
+    implementation 'org.javassist:javassist:3.29.2-GA'
+}
+
+jar {
+    manifest {
+        attributes(
+                "Manifest-Version": "1.0",
+                "Main-Class": "com.bgsoftware.jarmocker.JarMocker"
+        )
+    }
+}
+
+shadowJar {
+    dependsOn(jar)
+
+    archiveName = rootProject.name + "-" + version + ".jar"
+
+    destinationDir = file("./target/")
+    from sourceSets.getByName("main").output
+    configurations = [project.configurations.getByName("runtimeClasspath")]
+}
+
+build {
+    dependsOn shadowJar
+}
+
+publish.shouldRunAfter shadowJar
+shadowJar.shouldRunAfter build
+build.shouldRunAfter subprojects.build
